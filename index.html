@@ -7,8 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<!-- Three.js Library for Real 3D Canvas Background -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 :root {
   --bg: #03060d;
@@ -25,15 +23,52 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
 
-/* Fixed WebGL Background */
-#webgl-bg {
+/* Lightweight CSS-only animated background
+   Designed to work reliably inside Streamlit and normal browsers. */
+body {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.10), transparent 30%),
+    radial-gradient(circle at 85% 20%, rgba(138, 43, 226, 0.12), transparent 32%),
+    radial-gradient(circle at 50% 90%, rgba(0, 255, 170, 0.06), transparent 30%),
+    #03060d;
+  background-attachment: fixed;
+}
+
+body::before,
+body::after {
+  content: "";
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
   pointer-events: none;
+  z-index: 0;
+  filter: blur(90px);
+  opacity: 0.30;
+  animation: ambientFloat 14s ease-in-out infinite alternate;
+}
+
+body::before {
+  top: -150px;
+  left: -120px;
+  background: rgba(0, 240, 255, 0.20);
+}
+
+body::after {
+  right: -140px;
+  bottom: -160px;
+  background: rgba(138, 43, 226, 0.22);
+  animation-delay: -6s;
+}
+
+@keyframes ambientFloat {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(35px, 25px, 0) scale(1.12); }
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 10;
 }
 
 .content-wrapper { position: relative; z-index: 10; }
@@ -187,12 +222,28 @@ footer { border-top: 1px solid var(--border); padding: 40px 0; color: var(--mute
   .projects-grid, .skills-grid { grid-template-columns: 1fr; }
   .job { grid-template-columns: 1fr; gap: 6px; }
 }
+
+/* Subtle technical grid */
+body .content-wrapper::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.16;
+  background-image:
+    linear-gradient(rgba(0, 240, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black, transparent 90%);
+}
+
 </style>
 </head>
 <body>
 
 <!-- Three.js Canvas Container -->
-<canvas id="webgl-bg"></canvas>
+
 
 <div class="content-wrapper">
   <nav>
@@ -478,80 +529,6 @@ footer { border-top: 1px solid var(--border); padding: 40px 0; color: var(--mute
 </div>
 
 <script>
-// --- THREE.JS REAL 3D SCENE ENGINE ---
-const canvas = document.getElementById('webgl-bg');
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-// Floating 3D Objects in Background
-const group = new THREE.Group();
-
-// Wireframe Icosahedron (Data Core)
-const geo1 = new THREE.IcosahedronGeometry(4, 1);
-const mat1 = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.25 });
-const mesh1 = new THREE.Mesh(geo1, mat1);
-mesh1.position.set(6, 2, -5);
-group.add(mesh1);
-
-// Outer Ring (Cyber Shield)
-const geo2 = new THREE.TorusGeometry(7, 0.05, 16, 100);
-const mat2 = new THREE.MeshBasicMaterial({ color: 0x8a2be2, transparent: true, opacity: 0.4 });
-const mesh2 = new THREE.Mesh(geo2, mat2);
-mesh2.position.set(6, 2, -5);
-mesh2.rotation.x = Math.PI / 3;
-group.add(mesh2);
-
-// Floating Particle Swarm
-const particleGeo = new THREE.BufferGeometry();
-const count = 150;
-const posArray = new Float32Array(count * 3);
-
-for (let i = 0; i < count * 3; i++) {
-  posArray[i] = (Math.random() - 0.5) * 30;
-}
-particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-const particleMat = new THREE.PointsMaterial({ size: 0.08, color: 0x00ffaa, transparent: true, opacity: 0.6 });
-const particles = new THREE.Points(particleGeo, particleMat);
-group.add(particles);
-
-scene.add(group);
-camera.position.z = 10;
-
-// Mouse Movement for Background Only
-let mouseX = 0, mouseY = 0;
-window.addEventListener('mousemove', (e) => {
-  mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-  mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-});
-
-// Render Loop
-function animate() {
-  requestAnimationFrame(animate);
-
-  mesh1.rotation.x += 0.003;
-  mesh1.rotation.y += 0.005;
-  mesh2.rotation.y += 0.002;
-  particles.rotation.y += 0.0008;
-
-  // Parallax camera movement in background
-  camera.position.x += (mouseX * 1.5 - camera.position.x) * 0.05;
-  camera.position.y += (-mouseY * 1.5 - camera.position.y) * 0.05;
-  camera.lookAt(scene.position);
-
-  renderer.render(scene, camera);
-}
-animate();
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
 // Category Filter Engine
 const buttons = document.querySelectorAll('.filter'), projCards = document.querySelectorAll('.project-card');
 buttons.forEach(b => b.addEventListener('click', () => {
