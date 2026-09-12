@@ -3,41 +3,34 @@ import streamlit.components.v1 as components
 from pathlib import Path
 
 st.set_page_config(
-    page_title="Mekala Siva Prasad | Data • AI • Cyber Security",
+    page_title="Mekala Siva Prasad — Portfolio",
     page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
 )
 
-# Hide Streamlit UI
 st.markdown("""
 <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-
-    .stApp {
-        margin: 0;
-        padding: 0;
-    }
-
-    .block-container {
-        padding: 0;
-        max-width: 100%;
-    }
+#MainMenu, footer, header {visibility: hidden;}
+[data-testid="stAppViewContainer"] > .main {padding: 0 !important;}
+[data-testid="stMainBlockContainer"] {
+    padding: 0 !important;
+    max-width: 100% !important;
+}
+iframe {border: 0 !important;}
 </style>
 """, unsafe_allow_html=True)
 
-# Load portfolio HTML
-html_file = Path(__file__).parent / "index.html"
+html_path = Path(__file__).parent / "index.html"
 
-if html_file.exists():
-    html_content = html_file.read_text(encoding="utf-8")
+if not html_path.exists():
+    st.error("Portfolio file not found: index.html")
+    st.stop()
 
-    components.html(
-        html_content,
-        height=5000,
-        scrolling=True
-    )
-else:
-    st.error("index.html was not found in the repository.")
+html = html_path.read_text(encoding="utf-8")
+
+components.html(
+    html,
+    height=6500,
+    scrolling=True,
+)
